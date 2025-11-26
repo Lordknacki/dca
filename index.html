@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Cours Xiaomi (1810.HK) en EUR</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Cours Xiaomi 1810.HK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       background: #000;
       color: #f5f5f5;
@@ -15,95 +16,78 @@
       justify-content: center;
       height: 100vh;
     }
+
     .card {
-      text-align: center;
-      padding: 20px 30px;
+      background: #000;
       border-radius: 16px;
       border: 1px solid #333;
-      min-width: 260px;
+      padding: 10px;
+      width: 100%;
+      max-width: 420px;
     }
-    .title { font-size: 18px; margin-bottom: 6px; opacity: 0.8; }
-    .ticker { font-size: 22px; font-weight: 600; letter-spacing: 2px; margin-bottom: 12px; }
-    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
-    .price-eur { font-size: 40px; font-weight: 700; margin-bottom: 6px; }
-    .price-hkd { font-size: 14px; opacity: 0.7; margin-bottom: 8px; }
-    .change { font-size: 16px; margin-bottom: 8px; }
-    .change.positive { color: #4caf50; }
-    .change.negative { color: #f44336; }
-    .time { font-size: 11px; opacity: 0.6; margin-top: 4px; }
-    .error { color: #ff5555; font-size: 13px; margin-top: 8px; display: none; }
-    .loading { font-size: 13px; opacity: 0.8; margin-top: 6px; }
+
+    .title {
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+
+    .ticker {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+
+    /* Le conteneur TradingView doit juste prendre toute la largeur */
+    .tv-wrap {
+      width: 100%;
+      height: 260px; /* tu peux ajuster selon ton écran */
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="title">Cours (maj automatique)</div>
+    <div class="title">Cours en direct</div>
     <div class="ticker">XIAOMI • 1810.HK</div>
 
-    <div class="label">Prix actuel (EUR)</div>
-    <div id="price-eur" class="price-eur">--,-- €</div>
-
-    <div id="price-hkd" class="price-hkd">≈ --,-- HKD</div>
-
-    <div id="change" class="change">-- (--%)</div>
-
-    <div class="time" id="time">Dernière mise à jour : --</div>
-
-    <div id="loading" class="loading">Chargement...</div>
-    <div id="error" class="error"></div>
+    <div class="tv-wrap">
+      <!-- Widget TradingView mini overview -->
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript"
+          src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+{
+  "symbol": "HKEX:1810",
+  "width": "100%",
+  "height": "100%",
+  "locale": "fr",
+  "dateRange": "1D",
+  "colorTheme": "dark",
+  "isTransparent": true,
+  "autosize": true,
+  "hideDateRanges": true,
+  "hideMarketStatus": false,
+  "hideSymbolLogo": false,
+  "scalePosition": "right",
+  "scaleMode": "Normal",
+  "fontFamily": "Trebuchet MS, sans-serif",
+  "fontSize": "12",
+  "noTimeScale": false,
+  "chartType": "candlesticks",
+  "lineWidth": 2,
+  "timeFrames": [],
+  "upColor": "#26a69a",
+  "downColor": "#ef5350",
+  "borderUpColor": "#26a69a",
+  "borderDownColor": "#ef5350",
+  "wickUpColor": "#26a69a",
+  "wickDownColor": "#ef5350"
+}
+        </script>
+      </div>
+    </div>
   </div>
-
-  <script>
-    const priceEurEl = document.getElementById("price-eur");
-    const priceHkdEl = document.getElementById("price-hkd");
-    const changeEl = document.getElementById("change");
-    const timeEl = document.getElementById("time");
-    const loadingEl = document.getElementById("loading");
-    const errorEl = document.getElementById("error");
-
-    async function loadXiaomi() {
-      loadingEl.style.display = "block";
-      errorEl.style.display = "none";
-      errorEl.textContent = "";
-
-      try {
-        const res = await fetch("xiaomi.json?cachebuster=" + Date.now());
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-
-        const priceEur = data.price_eur;
-        const priceHkd = data.price_hkd;
-        const changeHkd = data.change_hkd;
-        const changePct = data.change_percent;
-        const lastTime = data.last_trading_time;
-        const generated = data.generated_at_utc;
-
-        priceEurEl.textContent = priceEur.toFixed(2).replace(".", ",") + " €";
-        priceHkdEl.textContent = "≈ " + priceHkd.toFixed(2) + " HKD";
-
-        let changeText = "-- (--%)";
-        if (typeof changeHkd === "number" && typeof changePct === "number") {
-          const sign = changeHkd > 0 ? "+" : "";
-          changeText = `${sign}${changeHkd.toFixed(2)} HKD (${sign}${changePct.toFixed(2)}%)`;
-        }
-        changeEl.textContent = changeText;
-        changeEl.classList.remove("positive", "negative");
-        if (changeHkd > 0) changeEl.classList.add("positive");
-        else if (changeHkd < 0) changeEl.classList.add("negative");
-
-        timeEl.textContent = "Dernière mise à jour : " + lastTime + " (UTC gen: " + generated + ")";
-      } catch (err) {
-        console.error(err);
-        errorEl.style.display = "block";
-        errorEl.textContent = "Erreur : " + err.message;
-      } finally {
-        loadingEl.style.display = "none";
-      }
-    }
-
-    loadXiaomi();
-    // (optionnel) rafraîchir côté navigateur, mais ça ne change que si xiaomi.json a été mis à jour par l'action
-    setInterval(loadXiaomi, 300_000);
-  </script>
 </body>
 </html>
