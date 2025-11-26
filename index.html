@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Cours Xiaomi (1810.HK)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #000;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .card {
+      text-align: center;
+      padding: 20px 30px;
+      border-radius: 16px;
+      border: 1px solid #333;
+      min-width: 260px;
+    }
+
+    .title {
+      font-size: 20px;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+
+    .ticker {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .price {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .change {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .change.positive {
+      color: #4caf50;
+    }
+
+    .change.negative {
+      color: #f44336;
+    }
+
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .time {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .error {
+      color: #ff5555;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .loading {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Cours en direct</div>
+    <div class="ticker">XIAOMI • 1810.HK</div>
+
+    <div class="label">Prix actuel (HKD)</div>
+    <div id="price" class="price">--.--</div>
+
+    <div id="change" class="change">-- (--%)</div>
+
+    <div class="time" id="time">Mise à jour : --</div>
+
+    <div id="loading" class="loading">Chargement...</div>
+    <div id="error" class="error" style="display:none;"></div>
+  </div>
+
+  <script>
+    const API_KEY = "MQVABCZ827XVHMA5";  // Ta clé API
+    const SYMBOL = "1810.HK";
+
+    const priceEl = document.getElementById("price");
+    const changeEl = document.getElementById("change");
+    const timeEl = document.getElementById("time");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+
+    async function fetchQuote() {
+      loadingEl.style.display = "block";
+      errorEl.style.display = "none";
+      errorEl.textContent = "";
+
+      try {
+        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(SYMBOL)}&apikey=${API_KEY}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Erreur réseau : " + res.status);
+
+        const data = await res.json();
+
+        const quote = data["Global Quote"];
+        if (!quote || !quote["05. price"]) {
+          throw new Error("Données de cours introuvables");
+        }
+
+        const price = parseFloat(quote["05. price"]);
+        const change = parseFloat(quote["09. change"]);
+        const changePercent = parseFloat(quote["10. change percent"]);
+
+        priceEl.textContent = price.toFixed(2);
+
+        let changeText = "";
+        if (!isNaN(change) && !isNaN(changePercent)) {
+          changeText = `${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
+        } else {
+          changeText = "-- (--%)";
+        }
+
+        changeEl.textContent = changeText;
+        changeEl.classList.remove("positive", "negative");
+        if (change > 0) {
+          changeEl.classList.add("positive");
+        } else if (change < 0) {
+          changeEl.classList.add("negative");
+        }
+
+        const now = new Date();
+        const opts = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
+        timeEl.textContent = "Mise à jour : " + now.toLocaleTimeString("fr-FR", opts);
+
+      } catch (err) {
+        console.error(err);
+        errorEl.style.display = "block";
+        errorEl.textContent = "Erreur : " + err.message;
+      } finally {
+        loadingEl.style.display = "none";
+      }
+    }
+
+    fetchQuote();
+    setInterval(fetchQuote, 60_000);
+  </script>
+</body>
+</html>
