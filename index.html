@@ -89,17 +89,17 @@
 </head>
 <body>
   <div class="card">
-    <div class="title">Cours en direct</div>
+    <div class="title">Cours (données quotidiennes)</div>
     <div class="ticker">XIAOMI • 1810.HK</div>
 
-    <div class="label">Prix actuel (EUR)</div>
+    <div class="label">Prix estimé (EUR)</div>
     <div id="price-eur" class="price-eur">--,-- €</div>
 
     <div id="price-hkd" class="price-hkd">≈ --,-- HKD</div>
 
-    <div id="change" class="change">-- (--%)</div>
+    <div id="change" class="change">Var. journalière : -- (--%)</div>
 
-    <div class="time" id="time">Mise à jour : --</div>
+    <div class="time" id="time">Dernière séance : --</div>
 
     <div id="loading" class="loading">Chargement...</div>
     <div id="error" class="error"></div>
@@ -124,31 +124,56 @@
       errorEl.textContent = "";
 
       try {
-        // 1) Cours Xiaomi en HKD
-        const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(SYMBOL)}&apikey=${API_KEY}`;
-        const quoteRes = await fetch(quoteUrl);
-        if (!quoteRes.ok) throw new Error("Erreur réseau (GLOBAL_QUOTE): " + quoteRes.status);
-        const quoteData = await quoteRes.json();
-        const quote = quoteData["Global Quote"];
-        if (!quote || !quote["05. price"]) {
-          throw new Error("Données de cours introuvables (GLOBAL_QUOTE)");
+        // 1) Données quotidiennes Xiaomi (HKD)
+        const dailyUrl =
+          `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(SYMBOL)}&outputsize=compact&apikey=${API_KEY}`;
+        const dailyRes = await fetch(dailyUrl);
+        if (!dailyRes.ok) throw new Error("Erreur réseau (TIME_SERIES_DAILY_ADJUSTED): " + dailyRes.status);
+
+        const dailyData = await dailyRes.json();
+        console.log("TIME_SERIES_DAILY_ADJUSTED brute:", dailyData);
+
+        const series = dailyData["Time Series (Daily)"];
+        if (!series) {
+          const note = dailyData["Note"] || dailyData["Error Message"] || "";
+          throw new Error("Données de cours introuvables (TIME_SERIES_DAILY_ADJUSTED) " + note);
         }
 
-        const priceHkd = parseFloat(quote["05. price"]);
-        const change = parseFloat(quote["09. change"]);
-        const changePctRaw = quote["10. change percent"]; // ex: "1.23%"
-        const changePct = changePctRaw ? parseFloat(changePctRaw) : NaN;
+        // Dernière date de cotation
+        const dates = Object.keys(series).sort(); // tri croissant
+        const lastDate = dates[dates.length - 1];
+        const prevDate = dates[dates.length - 2]; // veille (si dispo)
+
+        const lastBar = series[lastDate];
+        const prevBar = prevDate ? series[prevDate] : null;
+
+        const closeHkd = parseFloat(lastBar["4. close"]);
+        const prevCloseHkd = prevBar ? parseFloat(prevBar["4. close"]) : NaN;
+
+        if (isNaN(closeHkd)) {
+          throw new Error("Prix de clôture invalide pour " + lastDate);
+        }
+
+        let changeHkd = NaN;
+        let changePct = NaN;
+        if (!isNaN(prevCloseHkd)) {
+          changeHkd = closeHkd - prevCloseHkd;
+          changePct = (changeHkd / prevCloseHkd) * 100;
+        }
 
         // 2) Taux HKD -> EUR
         const fxUrl =
-          `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE` +
-          `&from_currency=${FROM_CCY}&to_currency=${TO_CCY}&apikey=${API_KEY}`;
+          `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${FROM_CCY}&to_currency=${TO_CCY}&apikey=${API_KEY}`;
         const fxRes = await fetch(fxUrl);
         if (!fxRes.ok) throw new Error("Erreur réseau (FX): " + fxRes.status);
+
         const fxData = await fxRes.json();
+        console.log("CURRENCY_EXCHANGE_RATE brute:", fxData);
+
         const fx = fxData["Realtime Currency Exchange Rate"];
         if (!fx || !fx["5. Exchange Rate"]) {
-          throw new Error("Taux de change introuvable (HKD/EUR)");
+          const note = fxData["Note"] || fxData["Error Message"] || "";
+          throw new Error("Taux de change introuvable (HKD/EUR) " + note);
         }
 
         const rateHkdEur = parseFloat(fx["5. Exchange Rate"]); // 1 HKD -> X EUR
@@ -156,27 +181,26 @@
           throw new Error("Taux de change invalide");
         }
 
-        const priceEur = priceHkd * rateHkdEur;
+        const priceEur = closeHkd * rateHkdEur;
 
         // 3) Affichage
         priceEurEl.textContent = priceEur.toFixed(2).replace(".", ",") + " €";
-        priceHkdEl.textContent = "≈ " + priceHkd.toFixed(2) + " HKD";
+        priceHkdEl.textContent = "≈ " + closeHkd.toFixed(2) + " HKD";
 
-        let changeText = "-- (--%)";
-        if (!isNaN(change) && !isNaN(changePct)) {
-          changeText = `${change.toFixed(2)} HKD (${changePct.toFixed(2)}%)`;
+        let changeText = "Var. journalière : -- (--%)";
+        if (!isNaN(changeHkd) && !isNaN(changePct)) {
+          const sign = changeHkd > 0 ? "+" : "";
+          changeText = `Var. journalière : ${sign}${changeHkd.toFixed(2)} HKD (${sign}${changePct.toFixed(2)}%)`;
         }
         changeEl.textContent = changeText;
         changeEl.classList.remove("positive", "negative");
-        if (change > 0) {
+        if (changeHkd > 0) {
           changeEl.classList.add("positive");
-        } else if (change < 0) {
+        } else if (changeHkd < 0) {
           changeEl.classList.add("negative");
         }
 
-        const now = new Date();
-        const opts = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
-        timeEl.textContent = "Mise à jour : " + now.toLocaleTimeString("fr-FR", opts);
+        timeEl.textContent = "Dernière séance : " + lastDate;
 
       } catch (err) {
         console.error(err);
@@ -189,8 +213,8 @@
 
     // Premier appel
     fetchQuoteInEur();
-    // Rafraîchissement toutes les 2 minutes (pour limiter les appels API)
-    setInterval(fetchQuoteInEur, 120_000);
+    // Rafraîchissement toutes les 10 minutes (pour éviter les limites d'API)
+    setInterval(fetchQuoteInEur, 600_000);
   </script>
 </body>
 </html>
