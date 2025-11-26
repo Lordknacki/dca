@@ -1,8 +1,10 @@
-import requests
+import os
 import json
+import requests
 from datetime import datetime, timezone
 
-YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=1810.HK"
+ALLTICK_TOKEN = os.getenv("ALLTICK_TOKEN")
+ALLTICK_URL = "https://quote.alltick.io/quote-stock-b-api/trade-tick"
 FX_URL = "https://api.frankfurter.app/latest?from=HKD&to=EUR"
 
 HEADERS = {
@@ -11,63 +13,70 @@ HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
+    "Accept": "application/json",
 }
 
 def get_xiaomi_hkd():
-    r = requests.get(YAHOO_QUOTE_URL, headers=HEADERS, timeout=15)
-    # Debug minimal pour voir ce que Yahoo renvoie
-    print("Yahoo status:", r.status_code)
-    print("Yahoo content-type:", r.headers.get("Content-Type", ""))
-    text_preview = r.text[:300].replace("\n", " ")
-    print("Yahoo body preview:", text_preview)
+    if not ALLTICK_TOKEN:
+        raise RuntimeError("ALLTICK_TOKEN manquant (secret GitHub non défini).")
 
-    try:
-        data = r.json()
-    except json.JSONDecodeError:
-        raise RuntimeError(
-            f"Réponse non JSON de Yahoo (code {r.status_code}) : {text_preview}"
-        )
+    # D’après leur doc, on envoie un JSON dans query=...
+    query = {
+        "data": {
+            "code": "01810.HK"  # Code HKEX de Xiaomi chez eux
+        }
+    }
 
-    try:
-        result = data["quoteResponse"]["result"][0]
-    except Exception:
-        raise RuntimeError(f"Données Yahoo introuvables : {data}")
+    params = {
+        "token": ALLTICK_TOKEN,
+        "query": json.dumps(query, separators=(",", ":"))
+    }
 
-    price_hkd = result.get("regularMarketPrice")
-    change_hkd = result.get("regularMarketChange")
-    change_pct = result.get("regularMarketChangePercent")
-    ts = result.get("regularMarketTime")
+    r = requests.get(ALLTICK_URL, params=params, headers=HEADERS, timeout=15)
+    print("AllTick status:", r.status_code)
+    print("AllTick body preview:", r.text[:300].replace("\n", " "))
+
+    data = r.json()
+
+    # La structure exacte peut varier un peu, mais en général :
+    # {
+    #   "code":0,
+    #   "msg":"success",
+    #   "data":[{"code":"01810.HK","last_price":..., "last_time": ...}, ...]
+    # }
+    if data.get("code") != 0 or "data" not in data or not data["data"]:
+        raise RuntimeError(f"Données AllTick introuvables ou erreur : {data}")
+
+    tick = data["data"][0]
+    price_hkd = tick.get("last_price")
+    last_time = tick.get("last_time")  # souvent timestamp en ms ou s
 
     if price_hkd is None:
-        raise RuntimeError(f"Prix HKD introuvable : {result}")
+        raise RuntimeError(f"Prix HKD introuvable : {tick}")
 
-    if ts:
-        last_time = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+    # On normalise l’heure si possible, sinon on la laisse brute
+    if isinstance(last_time, (int, float)):
+        # supposons un timestamp en secondes ou ms
+        if last_time > 10_000_000_000:  # heuristique ms vs s
+            last_dt = datetime.fromtimestamp(last_time / 1000, tz=timezone.utc)
+        else:
+            last_dt = datetime.fromtimestamp(last_time, tz=timezone.utc)
+        last_iso = last_dt.isoformat()
     else:
-        last_time = None
+        last_iso = str(last_time) if last_time is not None else None
 
-    return price_hkd, change_hkd, change_pct, last_time
+    # On n’a pas forcément le change HKD ni le % dans la même réponse, donc on laisse None
+    change_hkd = tick.get("change")  # si présent
+    change_pct = tick.get("change_ratio")  # si présent en %
+
+    return float(price_hkd), change_hkd, change_pct, last_iso
 
 def get_hkd_to_eur():
     r = requests.get(FX_URL, headers=HEADERS, timeout=15)
     print("FX status:", r.status_code)
-    print("FX content-type:", r.headers.get("Content-Type", ""))
-    text_preview = r.text[:200].replace("\n", " ")
-    print("FX body preview:", text_preview)
-
-    try:
-        data = r.json()
-    except json.JSONDecodeError:
-        raise RuntimeError(
-            f"Réponse non JSON de Frankfurter (code {r.status_code}) : {text_preview}"
-        )
-
-    try:
-        return float(data["rates"]["EUR"])
-    except Exception:
-        raise RuntimeError(f"Taux HKD/EUR introuvable : {data}")
+    print("FX body preview:", r.text[:200].replace("\n", " "))
+    data = r.json()
+    return float(data["rates"]["EUR"])
 
 def main():
     price_hkd, change_hkd, change_pct, last_time = get_xiaomi_hkd()
@@ -75,7 +84,7 @@ def main():
     price_eur = price_hkd * rate_hkd_eur
 
     payload = {
-        "symbol": "1810.HK",
+        "symbol": "01810.HK",
         "price_hkd": price_hkd,
         "price_eur": price_eur,
         "change_hkd": change_hkd,
