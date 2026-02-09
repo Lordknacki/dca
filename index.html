@@ -930,8 +930,19 @@
         persistSettings();
         persistSelection();
         renderAssetsList($("search").value || "");
-        await refreshAll();
-        startTimer();
+
+        try {
+          await refreshAll();
+          startTimer();
+        } catch (err) {
+          console.error(err);
+          setBadge("FETCH ERROR", "bad");
+          alert(
+            "Impossible de récupérer les données (CoinGecko).\n" +
+            "Ouvre la console (F12) pour voir l’erreur exacte.\n\n" +
+            "Causes fréquentes : 429 (rate limit), 403 (bloqué), ou CORS."
+          );
+        }
       });
 
       // First render + first refresh
