@@ -567,6 +567,7 @@
       // Big list for selection UI
       const url = `${COINGECKO_BASE}/coins/markets?vs_currency=${encodeURIComponent(vs)}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
       const res = await fetch(url, { headers: { "accept": "application/json" } });
+      console.log("fetchUniverse", res.status, res.statusText);
       if (!res.ok) throw new Error(`Universe fetch failed: ${res.status}`);
       return await res.json();
     }
@@ -576,6 +577,7 @@
       const days = 90;
       const url = `${COINGECKO_BASE}/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=${encodeURIComponent(vs)}&days=${days}&interval=daily`;
       const res = await fetch(url, { headers: { "accept": "application/json" } });
+      console.log("fetchMarketChart", coinId, res.status, res.statusText);
       if (!res.ok) throw new Error(`Chart fetch failed for ${coinId}: ${res.status}`);
       return await res.json();
     }
