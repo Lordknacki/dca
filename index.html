@@ -627,7 +627,7 @@
 
     function renderTable(){
       const tbody = $("tbody");
-      const ids = [...state.selectedIds];
+      const ids = [...state.selectedIds].slice(0, 12);
 
       if (!ids.length){
         tbody.innerHTML = `<tr><td colspan="10" class="muted">Sélectionne des actifs à gauche, puis “Appliquer”.</td></tr>`;
@@ -869,7 +869,7 @@
         try{
           const metrics = await computeCoinMetrics(id);
           state.lastRows.set(id, metrics);
-          await new Promise(r => setTimeout(r, 220)); // rate-limit friendly
+          await new Promise(r => setTimeout(r, 900)); // rate-limit friendly
         }catch(e){
           console.warn("Metrics error", id, e);
           // keep old if exists
