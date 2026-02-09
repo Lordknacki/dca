@@ -2,88 +2,945 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Cours Xiaomi – MUN:3CP</title>
+  <title>Dashboard Invest — Live + 12 semaines + Risque</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --bg:#000;
+      --panel:#070707;
+      --panel2:#0c0c0c;
+      --text:#f5f5f5;
+      --muted:#b8b8b8;
+      --border:#2b2b2b;
+      --ok:#7CFC00;
+      --warn:#ffd166;
+      --bad:#ff4d4d;
+      --accent:#7aa2ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.55);
+      --radius: 16px;
+      --radius2: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
 
-    body {
-      background: #000;
-      color: #f5f5f5;
+    body{
+      background: var(--bg);
+      color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
+      padding: 18px;
     }
 
-    .card {
-      background: #000;
-      border-radius: 16px;
-      border: 1px solid #333;
-      padding: 8px;
+    .wrap{
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title{
+      font-size: 14px;
+      opacity: .9;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .badge{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.02);
+      white-space: nowrap;
+    }
+
+    .content{ padding: 14px; }
+
+    .row{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .row + .row{ margin-top: 10px; }
+
+    input[type="text"], select{
       width: 100%;
-      max-width: 420px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    input[type="text"]::placeholder{ color: #8f8f8f; }
+
+    button{
+      background: rgba(122,162,255,.12);
+      border: 1px solid rgba(122,162,255,.35);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: transform .06s ease, background .15s ease;
+    }
+    button:hover{ background: rgba(122,162,255,.18); }
+    button:active{ transform: translateY(1px); }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
     }
 
-    .title {
-      font-size: 16px;
-      text-align: center;
-      margin-bottom: 4px;
-      opacity: 0.8;
+    .list{
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .list-head{
+      padding: 10px 12px;
+      background: rgba(255,255,255,.02);
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .list-body{
+      max-height: 360px;
+      overflow:auto;
     }
 
-    .ticker {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
+    .asset{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .asset:last-child{ border-bottom:none; }
+    .asset label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      cursor:pointer;
+    }
+    .asset .sym{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 4px 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      min-width: 68px;
+      text-align:center;
+    }
+    .asset .name{
+      font-size: 13px;
+      flex:1;
+      color: var(--text);
+      opacity:.92;
+    }
+    .asset .tag{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.02);
     }
 
-    .tv-wrap {
+    /* Table */
+    .table-wrap{ overflow:auto; }
+    table{
       width: 100%;
-      height: 260px; /* tu peux augmenter/réduire selon le cadre */
+      border-collapse: collapse;
+      min-width: 920px;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    th{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, rgba(10,10,10,.95), rgba(10,10,10,.88));
+      backdrop-filter: blur(6px);
+      z-index: 2;
+    }
+
+    .mono{ font-family: var(--mono); }
+    .muted{ color: var(--muted); }
+
+    .pill{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      display:inline-block;
+    }
+    .pos{ color: var(--ok); }
+    .neg{ color: var(--bad); }
+
+    .riskbar{
+      width: 140px;
+      height: 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.02);
+      overflow:hidden;
+      display:inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .riskbar > span{
+      display:block;
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, var(--ok), var(--warn), var(--bad));
+    }
+
+    .grid-charts{
+      padding: 14px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 980px){
+      .grid-charts{ grid-template-columns: 1fr; }
+    }
+
+    .chart{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(255,255,255,.01);
+      min-height: 260px;
+    }
+    .chart-head{
+      padding: 10px 12px;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      gap: 10px;
+    }
+
+    .tv-wrap{ width:100%; height: 220px; }
+
+    .footer-note{
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .kbd{
+      font-family: var(--mono);
+      border: 1px solid var(--border);
+      border-bottom-color: rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      padding: 2px 6px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
     }
   </style>
 </head>
-<body>
-  <div class="card">
-    <div class="title">Cours en direct</div>
-    <div class="ticker">XIAOMI • MUN:3CP</div>
 
-    <div class="tv-wrap">
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget"></div>
-        <!-- Widget mini TradingView pour le symbole MUN:3CP -->
-        <script
-          type="text/javascript"
-          src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js"
-          async
-        >
-{
-  "symbol": "MUN:3CP",
-  "width": "100%",
-  "height": "100%",
-  "locale": "fr",
-  "dateRange": "1D",
-  "colorTheme": "dark",
-  "isTransparent": true,
-  "autosize": true,
-  "hideDateRanges": true,
-  "hideMarketStatus": false,
-  "hideSymbolLogo": false,
-  "scalePosition": "right",
-  "scaleMode": "Normal",
-  "fontFamily": "Trebuchet MS, sans-serif",
-  "fontSize": "12",
-  "noTimeScale": false,
-  "chartType": "candlesticks",
-  "lineWidth": 2,
-  "timeFrames": []
-}
-        </script>
+<body>
+  <div class="wrap">
+
+    <!-- LEFT: Controls -->
+    <section class="card" id="controlsCard">
+      <div class="card-header">
+        <div>
+          <div class="title">Sélection d’actifs + paramètres</div>
+          <div class="subtitle">
+            Données crypto via CoinGecko (sans clé). Perf 12 semaines (≈84–90 jours), volatilité, drawdown et score de risque.
+          </div>
+        </div>
+        <div class="badge" id="statusBadge">IDLE</div>
       </div>
-    </div>
+
+      <div class="content">
+        <div class="row">
+          <input id="search" type="text" placeholder="Rechercher (ex: bitcoin, eth, sol...)">
+        </div>
+
+        <div class="row">
+          <label class="small" style="flex:1">
+            Devise d’affichage
+            <select id="vsCurrency">
+              <option value="eur" selected>EUR</option>
+              <option value="usd">USD</option>
+              <option value="gbp">GBP</option>
+            </select>
+          </label>
+
+          <label class="small" style="width: 160px">
+            Refresh (sec)
+            <select id="refreshSec">
+              <option value="15">15</option>
+              <option value="30" selected>30</option>
+              <option value="60">60</option>
+              <option value="120">120</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <button id="btnApply">Appliquer</button>
+          <button id="btnSelectTop">Top 10</button>
+          <button id="btnClear">Tout désélectionner</button>
+        </div>
+
+        <div class="row small">
+          Astuces : <span class="kbd">Ctrl</span> + <span class="kbd">F</span> pour rechercher, et le score combine volatilité + drawdown + “distance au SMA 12 semaines”.
+        </div>
+
+        <div class="list">
+          <div class="list-head">
+            <div class="small"><span id="countShown">0</span> affichés • <span id="countSelected">0</span> sélectionnés</div>
+            <div class="small muted">Source: CoinGecko</div>
+          </div>
+          <div class="list-body" id="assetsList"></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Le “live” = dernier prix CoinGecko + rafraîchissement. Pour des actions (ex: MUN:3CP), ajoute un provider côté backend/worker (CORS + stabilité).
+      </div>
+    </section>
+
+    <!-- RIGHT: Output -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="title">Tableau d’investissement (12 semaines)</div>
+          <div class="subtitle">
+            Prix, variation 12 semaines, volatilité annualisée, max drawdown, SMA 12w, écart au SMA, score de risque et action.
+          </div>
+        </div>
+        <div class="badge" id="lastUpdate">—</div>
+      </div>
+
+      <div class="content table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Actif</th>
+              <th>Prix</th>
+              <th>Perf 12w</th>
+              <th>Vol (ann.)</th>
+              <th>Max DD</th>
+              <th>SMA 12w</th>
+              <th>Écart SMA</th>
+              <th>Risque</th>
+              <th>Action</th>
+              <th class="muted">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="10" class="muted">Sélectionne des actifs à gauche, puis “Appliquer”.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-charts" id="chartsGrid"></div>
+
+      <div class="footer-note">
+        Interprétation rapide : <span class="kbd">Vol</span> = amplitude des variations, <span class="kbd">DD</span> = pire chute depuis un sommet, <span class="kbd">Écart SMA</span> = sur/sous-évaluation relative (tendance).
+      </div>
+    </section>
+
   </div>
+
+  <script>
+    /***********************
+     *  Config / Universe
+     ***********************/
+    const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
+    const DEFAULTS = {
+      vsCurrency: "eur",
+      refreshSec: 30,
+      selectedIds: ["bitcoin","ethereum","solana","binancecoin","ripple","cardano","dogecoin","chainlink","polkadot","avalanche-2"],
+    };
+
+    // TradingView symbols for chart display (optional).
+    // For crypto, TradingView uses "BINANCE:BTCUSDT" etc. You can extend/adjust.
+    const TV_MAP = {
+      bitcoin: "BINANCE:BTCUSDT",
+      ethereum: "BINANCE:ETHUSDT",
+      solana: "BINANCE:SOLUSDT",
+      binancecoin: "BINANCE:BNBUSDT",
+      ripple: "BINANCE:XRPUSDT",
+      cardano: "BINANCE:ADAUSDT",
+      dogecoin: "BINANCE:DOGEUSDT",
+      chainlink: "BINANCE:LINKUSDT",
+      polkadot: "BINANCE:DOTUSDT",
+      "avalanche-2": "BINANCE:AVAXUSDT",
+      litecoin: "BINANCE:LTCUSDT",
+      "bitcoin-cash": "BINANCE:BCHUSDT",
+      toncoin: "KUCOIN:TONUSDT", // parfois différent selon broker
+    };
+
+    const state = {
+      assetsUniverse: [],      // list from /coins/markets
+      selectedIds: new Set(),
+      vsCurrency: DEFAULTS.vsCurrency,
+      refreshSec: DEFAULTS.refreshSec,
+      timer: null,
+      lastRows: new Map(),     // id -> computed metrics (for quick rerender)
+    };
+
+    /***********************
+     *  Small helpers
+     ***********************/
+    const $ = (id) => document.getElementById(id);
+
+    function setBadge(text, kind="idle"){
+      const el = $("statusBadge");
+      el.textContent = text;
+      const styles = {
+        idle: "1px solid var(--border)",
+        ok: "1px solid rgba(124,252,0,.35)",
+        warn: "1px solid rgba(255,209,102,.35)",
+        bad: "1px solid rgba(255,77,77,.35)",
+      };
+      el.style.border = styles[kind] || styles.idle;
+    }
+
+    function fmtMoney(x, cur){
+      if (x == null || !isFinite(x)) return "—";
+      return new Intl.NumberFormat("fr-FR", { style:"currency", currency: cur.toUpperCase() }).format(x);
+    }
+    function fmtPct(x){
+      if (x == null || !isFinite(x)) return "—";
+      const sign = x > 0 ? "+" : "";
+      return sign + (x*100).toFixed(2) + "%";
+    }
+    function fmtNum(x, digits=2){
+      if (x == null || !isFinite(x)) return "—";
+      return Number(x).toFixed(digits);
+    }
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    function nowParis(){
+      return new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris" });
+    }
+
+    /***********************
+     *  Finance metrics
+     ***********************/
+    function returnsFromPrices(prices){
+      // prices: array of numbers (close)
+      const r = [];
+      for (let i=1;i<prices.length;i++){
+        const prev = prices[i-1];
+        const cur = prices[i];
+        if (prev > 0) r.push((cur/prev) - 1);
+      }
+      return r;
+    }
+
+    function mean(arr){
+      if (!arr.length) return NaN;
+      return arr.reduce((a,b)=>a+b,0)/arr.length;
+    }
+
+    function stdev(arr){
+      if (arr.length < 2) return NaN;
+      const m = mean(arr);
+      const v = arr.reduce((a,x)=>a + Math.pow(x-m,2),0)/(arr.length-1);
+      return Math.sqrt(v);
+    }
+
+    function sma(arr){
+      if (!arr.length) return NaN;
+      return mean(arr);
+    }
+
+    function maxDrawdown(prices){
+      let peak = -Infinity;
+      let maxDD = 0; // negative number
+      for (const p of prices){
+        if (p > peak) peak = p;
+        if (peak > 0){
+          const dd = (p/peak) - 1;
+          if (dd < maxDD) maxDD = dd;
+        }
+      }
+      return maxDD;
+    }
+
+    function riskScore({ volAnn, maxDD, distToSma }){
+      // Simple but robust multi-factor risk (0..100)
+      // - volAnn: annualized volatility (e.g., 0.60 = 60%)
+      // - maxDD: negative (e.g., -0.35 = -35%)
+      // - distToSma: absolute distance to SMA (e.g., 0.12 = 12%)
+      //
+      // We clamp each factor to reasonable bounds to avoid explosion on microcaps.
+      const volN = clamp((volAnn ?? 0) / 1.2, 0, 1);             // 120% vol -> 1
+      const ddN  = clamp(Math.abs(maxDD ?? 0) / 0.65, 0, 1);     // 65% DD -> 1
+      const smaN = clamp(Math.abs(distToSma ?? 0) / 0.35, 0, 1); // 35% away -> 1
+      // Weighted: drawdown and vol dominate, sma distance adds “overheat” / “deep discount”
+      const score = (0.45*ddN + 0.45*volN + 0.10*smaN) * 100;
+      return Math.round(clamp(score, 0, 100));
+    }
+
+    function riskLabel(score){
+      if (score <= 25) return { label:"Faible", color:"var(--ok)" };
+      if (score <= 55) return { label:"Moyen",  color:"var(--warn)" };
+      return { label:"Élevé", color:"var(--bad)" };
+    }
+
+    function actionReco({ perf12w, score, distToSma, maxDD }){
+      // “Expert-ish” but still deterministic:
+      // - avoid chasing very hot moves when risk high
+      // - prefer DCA when medium risk
+      // - be cautious when drawdown deep but trend still weak
+      const p = perf12w ?? 0;
+      const d = distToSma ?? 0;
+      const dd = maxDD ?? 0;
+
+      if (score >= 75 && p > 0.20 && d > 0.12) return "Prendre profits / réduire";
+      if (score >= 75 && dd < -0.45) return "Éviter (risque extrême)";
+      if (score >= 60) return "DCA très léger / attendre";
+      if (score >= 40 && p < -0.10 && d < -0.08) return "DCA progressif (prudence)";
+      if (score >= 40) return "DCA / renforcer par paliers";
+      if (score <= 25 && p >= 0) return "Renforcer (risque faible)";
+      return "Hold / surveiller";
+    }
+
+    /***********************
+     *  Data Provider: Crypto (CoinGecko)
+     ***********************/
+    async function fetchUniverse(vs){
+      // Big list for selection UI
+      const url = `${COINGECKO_BASE}/coins/markets?vs_currency=${encodeURIComponent(vs)}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
+      const res = await fetch(url, { headers: { "accept": "application/json" } });
+      if (!res.ok) throw new Error(`Universe fetch failed: ${res.status}`);
+      return await res.json();
+    }
+
+    async function fetchMarketChart(coinId, vs){
+      // 90 days (close enough to 12 weeks); CoinGecko returns [timestamp, price]
+      const days = 90;
+      const url = `${COINGECKO_BASE}/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=${encodeURIComponent(vs)}&days=${days}&interval=daily`;
+      const res = await fetch(url, { headers: { "accept": "application/json" } });
+      if (!res.ok) throw new Error(`Chart fetch failed for ${coinId}: ${res.status}`);
+      return await res.json();
+    }
+
+    /***********************
+     *  Rendering
+     ***********************/
+    function renderAssetsList(filter=""){
+      const list = $("assetsList");
+      list.innerHTML = "";
+      const f = filter.trim().toLowerCase();
+
+      const shown = state.assetsUniverse.filter(a => {
+        if (!f) return true;
+        return (a.name || "").toLowerCase().includes(f) || (a.symbol || "").toLowerCase().includes(f) || (a.id || "").toLowerCase().includes(f);
+      });
+
+      $("countShown").textContent = shown.length;
+      $("countSelected").textContent = state.selectedIds.size;
+
+      for (const a of shown){
+        const row = document.createElement("div");
+        row.className = "asset";
+
+        const checked = state.selectedIds.has(a.id) ? "checked" : "";
+
+        row.innerHTML = `
+          <label>
+            <input type="checkbox" data-id="${a.id}" ${checked} />
+            <span class="sym">${(a.symbol || "").toUpperCase()}</span>
+            <span class="name">${a.name}</span>
+            <span class="tag">#${a.market_cap_rank ?? "—"}</span>
+          </label>
+        `;
+
+        row.querySelector("input").addEventListener("change", (e)=>{
+          const id = e.target.getAttribute("data-id");
+          if (e.target.checked) state.selectedIds.add(id);
+          else state.selectedIds.delete(id);
+          $("countSelected").textContent = state.selectedIds.size;
+          persistSelection();
+        });
+
+        list.appendChild(row);
+      }
+    }
+
+    function renderTable(){
+      const tbody = $("tbody");
+      const ids = [...state.selectedIds];
+
+      if (!ids.length){
+        tbody.innerHTML = `<tr><td colspan="10" class="muted">Sélectionne des actifs à gauche, puis “Appliquer”.</td></tr>`;
+        $("chartsGrid").innerHTML = "";
+        return;
+      }
+
+      // Use computed rows stored in state.lastRows; if not ready, show loading lines.
+      const rows = ids.map(id => state.lastRows.get(id)).filter(Boolean);
+
+      if (rows.length === 0){
+        tbody.innerHTML = `<tr><td colspan="10" class="muted">Chargement des métriques…</td></tr>`;
+        return;
+      }
+
+      // Sort by risk desc then market cap rank asc
+      rows.sort((a,b)=> (b.riskScore - a.riskScore) || ((a.rank ?? 9999) - (b.rank ?? 9999)));
+
+      tbody.innerHTML = rows.map(r=>{
+        const perfCls = (r.perf12w ?? 0) >= 0 ? "pos" : "neg";
+        const distCls = (r.distToSma ?? 0) >= 0 ? "pos" : "neg";
+        const rk = riskLabel(r.riskScore);
+        const dotColor = rk.color;
+
+        return `
+          <tr>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span>${r.name} <span class="mono muted">(${r.symbol})</span></span>
+                <span class="mono muted" style="font-size:11px;">${r.id}</span>
+              </div>
+            </td>
+            <td class="mono">${fmtMoney(r.price, state.vsCurrency)}</td>
+            <td class="mono ${perfCls}">${fmtPct(r.perf12w)}</td>
+            <td class="mono">${fmtPct(r.volAnn)}</td>
+            <td class="mono neg">${fmtPct(r.maxDD)}</td>
+            <td class="mono">${fmtMoney(r.sma12w, state.vsCurrency)}</td>
+            <td class="mono ${distCls}">${fmtPct(r.distToSma)}</td>
+            <td>
+              <span class="riskbar"><span style="width:${r.riskScore}%;"></span></span>
+              <span class="pill"><span class="dot" style="background:${dotColor};"></span>${rk.label} • ${r.riskScore}/100</span>
+            </td>
+            <td class="mono">${r.action}</td>
+            <td class="muted" style="font-size:12px; max-width:260px;">
+              ${r.note}
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      renderCharts(rows.slice(0, 4)); // top 4 charts to keep page light
+    }
+
+    function renderCharts(rows){
+      const grid = $("chartsGrid");
+      grid.innerHTML = "";
+
+      const wantsCharts = true;
+      if (!wantsCharts) return;
+
+      for (const r of rows){
+        const tv = TV_MAP[r.id];
+        const box = document.createElement("div");
+        box.className = "chart";
+        box.innerHTML = `
+          <div class="chart-head">
+            <div>
+              <div class="title">${r.name} <span class="mono muted">(${r.symbol})</span></div>
+              <div class="subtitle">TradingView • ${tv ? tv : "symbole non mappé"}</div>
+            </div>
+            <div class="badge mono">${fmtPct(r.perf12w)}</div>
+          </div>
+          <div class="tv-wrap">
+            ${tv ? `
+              <div class="tradingview-widget-container" style="height:100%; width:100%;">
+                <div class="tradingview-widget-container__widget" style="height:100%; width:100%;"></div>
+              </div>
+            ` : `
+              <div style="padding:12px;" class="small muted">
+                Ajoute ce coin à <span class="kbd">TV_MAP</span> pour afficher le graphique (ex: BINANCE:XXXUSDT).
+              </div>
+            `}
+          </div>
+        `;
+        grid.appendChild(box);
+
+        if (tv){
+          injectTradingViewMini(box.querySelector(".tradingview-widget-container__widget"), tv);
+        }
+      }
+    }
+
+    function injectTradingViewMini(targetEl, symbol){
+      // We inject a script element with JSON config (like your base code)
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
+      script.async = true;
+      script.text = JSON.stringify({
+        symbol,
+        width: "100%",
+        height: "100%",
+        locale: "fr",
+        dateRange: "3M",
+        colorTheme: "dark",
+        isTransparent: true,
+        autosize: true,
+        hideDateRanges: true,
+        hideMarketStatus: false,
+        hideSymbolLogo: false,
+        scalePosition: "right",
+        scaleMode: "Normal",
+        fontFamily: "Trebuchet MS, sans-serif",
+        fontSize: "12",
+        noTimeScale: false,
+        chartType: "candlesticks",
+        lineWidth: 2,
+        timeFrames: []
+      });
+
+      // Put script in the parent container
+      targetEl.parentElement.appendChild(script);
+    }
+
+    /***********************
+     *  Core: compute metrics for a coin
+     ***********************/
+    async function computeCoinMetrics(coinId){
+      const uni = state.assetsUniverse.find(x=>x.id===coinId);
+      if (!uni) throw new Error("Unknown coin: " + coinId);
+
+      const chart = await fetchMarketChart(coinId, state.vsCurrency);
+      const prices = (chart.prices || []).map(p => p[1]).filter(x => isFinite(x));
+
+      // Guard
+      if (prices.length < 20) throw new Error(`Not enough data for ${coinId}`);
+
+      const first = prices[0];
+      const last  = prices[prices.length-1];
+      const perf12w = (first > 0) ? (last/first - 1) : NaN;
+
+      const rets = returnsFromPrices(prices);
+      const volDaily = stdev(rets);
+      const volAnn = isFinite(volDaily) ? volDaily * Math.sqrt(365) : NaN;
+
+      const sma12w = sma(prices);
+      const distToSma = (sma12w > 0) ? (last/sma12w - 1) : NaN;
+
+      const maxDD = maxDrawdown(prices);
+
+      const score = riskScore({ volAnn, maxDD, distToSma });
+      const action = actionReco({ perf12w, score, distToSma, maxDD });
+
+      // A small “expert” note
+      const noteParts = [];
+      if (volAnn > 0.9) noteParts.push("Volatilité très élevée.");
+      if (maxDD < -0.45) noteParts.push("Drawdown profond.");
+      if (distToSma > 0.15) noteParts.push("Tendance “overheat” (au-dessus SMA).");
+      if (distToSma < -0.15) noteParts.push("Sous SMA (pression vendeuse).");
+      const note = noteParts.length ? noteParts.join(" ") : "Profil relativement équilibré sur 12 semaines.";
+
+      return {
+        id: coinId,
+        name: uni.name,
+        symbol: (uni.symbol || "").toUpperCase(),
+        rank: uni.market_cap_rank,
+        price: uni.current_price,
+        perf12w,
+        volAnn,
+        maxDD,
+        sma12w,
+        distToSma,
+        riskScore: score,
+        action,
+        note
+      };
+    }
+
+    /***********************
+     *  Persistence
+     ***********************/
+    function persistSelection(){
+      localStorage.setItem("inv_selectedIds", JSON.stringify([...state.selectedIds]));
+    }
+    function persistSettings(){
+      localStorage.setItem("inv_vsCurrency", state.vsCurrency);
+      localStorage.setItem("inv_refreshSec", String(state.refreshSec));
+    }
+    function loadPersisted(){
+      try{
+        const s = JSON.parse(localStorage.getItem("inv_selectedIds") || "null");
+        const vs = localStorage.getItem("inv_vsCurrency");
+        const rf = localStorage.getItem("inv_refreshSec");
+
+        state.vsCurrency = vs || DEFAULTS.vsCurrency;
+        state.refreshSec = rf ? Number(rf) : DEFAULTS.refreshSec;
+
+        const ids = Array.isArray(s) && s.length ? s : DEFAULTS.selectedIds;
+        state.selectedIds = new Set(ids);
+      }catch{
+        state.selectedIds = new Set(DEFAULTS.selectedIds);
+      }
+
+      $("vsCurrency").value = state.vsCurrency;
+      $("refreshSec").value = String(state.refreshSec);
+      $("countSelected").textContent = state.selectedIds.size;
+    }
+
+    /***********************
+     *  Refresh loop
+     ***********************/
+    function startTimer(){
+      stopTimer();
+      state.timer = setInterval(() => {
+        refreshAll().catch(err => console.error(err));
+      }, state.refreshSec * 1000);
+    }
+    function stopTimer(){
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+    }
+
+    async function refreshAll(){
+      const ids = [...state.selectedIds];
+      if (!ids.length){
+        state.lastRows.clear();
+        renderTable();
+        return;
+      }
+
+      setBadge("UPDATING", "warn");
+
+      // 1) Refresh universe prices (fast)
+      state.assetsUniverse = await fetchUniverse(state.vsCurrency);
+
+      // 2) Compute metrics per selected coin (heavier)
+      // To be nice with rate limits: do sequential with tiny delay
+      for (const id of ids){
+        try{
+          const metrics = await computeCoinMetrics(id);
+          state.lastRows.set(id, metrics);
+          await new Promise(r => setTimeout(r, 220)); // rate-limit friendly
+        }catch(e){
+          console.warn("Metrics error", id, e);
+          // keep old if exists
+        }
+      }
+
+      $("lastUpdate").textContent = "MAJ: " + nowParis();
+      setBadge("LIVE", "ok");
+      renderTable();
+    }
+
+    /***********************
+     *  Init + UI wiring
+     ***********************/
+    async function init(){
+      loadPersisted();
+      setBadge("LOADING", "warn");
+
+      try{
+        state.assetsUniverse = await fetchUniverse(state.vsCurrency);
+        setBadge("READY", "ok");
+      }catch(e){
+        console.error(e);
+        setBadge("ERROR", "bad");
+      }
+
+      renderAssetsList("");
+      $("search").addEventListener("input", (e)=> renderAssetsList(e.target.value));
+
+      $("vsCurrency").addEventListener("change", (e)=>{
+        state.vsCurrency = e.target.value;
+        persistSettings();
+      });
+
+      $("refreshSec").addEventListener("change", (e)=>{
+        state.refreshSec = Number(e.target.value);
+        persistSettings();
+        startTimer();
+      });
+
+      $("btnSelectTop").addEventListener("click", ()=>{
+        // select top 10 by market cap from universe
+        const top = state.assetsUniverse.slice(0, 10).map(x=>x.id);
+        state.selectedIds = new Set(top);
+        persistSelection();
+        $("countSelected").textContent = state.selectedIds.size;
+        renderAssetsList($("search").value || "");
+      });
+
+      $("btnClear").addEventListener("click", ()=>{
+        state.selectedIds.clear();
+        persistSelection();
+        $("countSelected").textContent = "0";
+        renderAssetsList($("search").value || "");
+        state.lastRows.clear();
+        renderTable();
+      });
+
+      $("btnApply").addEventListener("click", async ()=>{
+        persistSettings();
+        persistSelection();
+        renderAssetsList($("search").value || "");
+        await refreshAll();
+        startTimer();
+      });
+
+      // First render + first refresh
+      renderTable();
+      await refreshAll();
+      startTimer();
+    }
+
+    init().catch(console.error);
+  </script>
 </body>
 </html>
