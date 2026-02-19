@@ -1,0 +1,14 @@
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  text-align: center;
+}
+
+.alert {
+  background: red;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 8px;
+  font-size: 18px;
+}
